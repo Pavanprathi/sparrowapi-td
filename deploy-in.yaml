@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: sparrow-api
+  name: sparrow-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sparrow-api
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: sparrow-api
+    spec:
+      containers:
+        - image: 296062548612.dkr.ecr.ap-south-1.amazonaws.com/sparrowapi-td:latest
+          name: sparrow-api
+          imagePullPolicy: Always
+          resources: {}
+          ports:
+            - containerPort: 9000
+            - containerPort: 9001
+
+          # livenessProbe:
+          #   httpGet:
+          #     path: /health
+          #     port: 9000
+          #   initialDelaySeconds: 40
+          #   periodSeconds: 5
+          #   failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 9000
+            initialDelaySeconds: 40
+            periodSeconds: 5
+            failureThreshold: 3
+      envFrom:
+        - configMapRef:
+            name: sparrow-api-configmap
+        - secretRef:
+            name: sparrow-api-secrets
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sparrow-api
+  labels:
+    run: sparrow-api
+spec:
+  type: ClusterIP
+  selector:
+    app: sparrow-api
+  ports:
+    - name: http
+      protocol: TCP
+      port: 80
+      targetPort: 9000
